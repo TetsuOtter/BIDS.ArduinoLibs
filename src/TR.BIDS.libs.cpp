@@ -28,7 +28,17 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
     return false;
   if (Actions_count >= Actions_MAX)
     return false;
-  if (CmdSenderI(("TRA" + String(type) + String(data_num)).c_str()) != 0)
+  bool IsSameDataAlready = false;
+  for (int i = 0; i < Actions_count; i++)
+  {
+    if (ASActions[i].type == type && ASActions[i].data_num == data_num)
+    {
+      IsSameDataAlready = true;
+      if (ASActions[i].action == act)
+        return false;
+    }
+  }
+  if (!IsSameDataAlready || CmdSenderI(("TRA" + String(type) + String(data_num)).c_str()) != 0)
     return false;
 
   int Act_num = Actions_count++;
@@ -43,7 +53,7 @@ bool BIDS::AddAutoSend(ASAction asa)
   return AddAutoSend(asa.type, asa.data_num, asa.action);
 }
 
-bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
+bool BIDS::RmvAutoSend(char type, int data_num)
 {
   if (Actions_count <= 0)
     return false;
@@ -52,7 +62,7 @@ bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
     return false;
   for (int i = 0; i < Actions_count; i++)
   {
-    if (ASActions[i].type == type && ASActions[i].data_num == data_num && ASActions[i].action == act)
+    if (!IsFound && ASActions[i].type == type && ASActions[i].data_num == data_num)
       IsFound = true;
     if (IsFound && (i + 1) < Actions_count)
     {
@@ -109,7 +119,8 @@ bool BIDS::ASDataCheck(bool *NonASCMDGot)
   int valI = atoi(&LastCMD[data_start_pos]);
   double valF = atof(&LastCMD[data_start_pos]);
   bool Done = false;
-  for (int i = 0; i < Actions_count; i++) {
+  for (int i = 0; i < Actions_count; i++)
+  {
     if (LastCMD[3] == ASActions[i].type && dnum == ASActions[i].data_num)
     {
       ASActions[i].action(valI, valF);
@@ -191,6 +202,7 @@ double BIDS::CmdSenderF(const char *cmd)
   CmdSender(cmd, &ret);
   return ret;
 }
-bool BIDS::IsEnable() {
+bool BIDS::IsEnable()
+{
   return isEnable;
 }

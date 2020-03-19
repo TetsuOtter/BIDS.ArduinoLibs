@@ -35,7 +35,7 @@ public:
   ~BIDS();
   bool AddAutoSend(char type, int data_num, AS_OnDataGot act);
   bool AddAutoSend(ASAction asa);
-  bool RmvAutoSend(char type, int data_num, AS_OnDataGot act);
+  bool RmvAutoSend(char type, int data_num);
   bool RmvAutoSend(ASAction asa);
   bool ASDataCheck(bool *NonASCMDGot);
 

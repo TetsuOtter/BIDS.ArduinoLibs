@@ -1,4 +1,7 @@
-# BIDS Serial Library for Arduino
+# BIDS Communication Library for Arduino
+Serial Interfaceを通じたBIDS中継ソフトとの通信を補助します。  
+BIDS.ArduinoSketchesから移動したものです。
+
 ## functions
 ### BIDS(*Stream)
 BIDSクラスを初期化します。引数には、予め通信が開始された状態のシリアルインターフェースへのポインタを渡します。  
@@ -33,5 +36,7 @@ void func(int i, double d)
 }
 ~~~
 
+### RmvAutoSend(char, int)
+引数で指定された情報についてAutoSendの停止要求を出します。停止要求が受理された場合、
 
 以下準備中
