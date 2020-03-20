@@ -78,7 +78,7 @@ bool BIDS::RmvAutoSend(char type, int data_num)
 }
 bool BIDS::RmvAutoSend(ASAction asa)
 {
-  return RmvAutoSend(asa.type, asa.data_num, asa.action);
+  return RmvAutoSend(asa.type, asa.data_num);
 }
 
 bool BIDS::ASDataCheck(bool *NonASCMDGot)
