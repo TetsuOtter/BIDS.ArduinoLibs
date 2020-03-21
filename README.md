@@ -4,7 +4,7 @@ BIDS.ArduinoSketchesから移動したものです。
 
 ## functions
 ### BIDS(*Stream)
-BIDSクラスを初期化します。引数には、予め通信が開始された状態のシリアルインターフェースへのポインタを渡します。  
+BIDSクラスを初期化します。引数には、予め通信が開始された状態のシリアルインターフェース(正確にはStreamクラス)へのポインタを渡します。  
 通信が開始されていない状態での使用は想定されていません。
 
 ### AddAutoSend(char, int, AS_OnDataGot)
@@ -36,7 +36,9 @@ void func(int i, double d)
 }
 ~~~
 
-### RmvAutoSend(char, int)
-引数で指定された情報についてAutoSendの停止要求を出します。停止要求が受理された場合、
+### RmvAutoSend(char, int, AS_OnDataGot)
+引数で指定された情報についてAutoSendの停止要求を出します。停止要求が受理された場合、内部AutoSend管理リストより該当する情報を削除します。
+
+返り値は、削除に成功したかどうかです。
 
 以下準備中
