@@ -2,35 +2,37 @@
 Serial Interfaceを通じたBIDS中継ソフトとの通信を補助します。  
 BIDS.ArduinoSketchesから移動したものです。
 
-## examples
+---
+# examples
 [スケッチ例に関しては、こちらをご覧ください。](./examples/README.md)
 
-## TR.BIDS.libs.h
+---
+# TR.BIDS.libs.h
 通信を補助する機能を定義しています。実装はTR.BIDS.libs.cppにあります。
 
-### Constant Values
+## Constant Values
 publicなもののみを扱います。privateなものはソースコードを直接参照してください。
-#### AS_MAX
+### AS_MAX
 初期値 : 100  
 internal ASListのキャパシティを指定します。本ヘッダを読み込む前にdefineすることにより、任意の値に変更することが可能…だと思われます。
 
-#### CMD_LEN_MAX
+### CMD_LEN_MAX
 初期値 : 128  
 受信データの許容最大長を指定します。本ヘッダを読み込む前にdefineすることにより、任意の値に変更することが可能…だと思われます。
 
-### Variables
+## Variables
 publicなもののみを扱います。privateなものはソースコードを直接参照してください。
-#### char LastCMD[CMD_LEN_MAX]
+### char LastCMD[CMD_LEN_MAX]
 ASDataCheckにて受信した生データを格納します。
 
-### functions
+## functions
 publicなもののみを扱います。privateなものはソースコードを直接参照してください。
 
-#### BIDS(Stream *)
+### BIDS(Stream *)
 BIDSクラスを初期化します。引数には、予め通信が開始された状態のシリアルインターフェース(正確にはStreamクラス)へのポインタを渡します。  
 通信が開始されていない状態での使用は想定されていません。
 
-#### bool AddAutoSend(char, int, AS_OnDataGot)
+### bool AddAutoSend(char, int, AS_OnDataGot)
 ライブラリ内部のAutoSend管理リストに、引数で指定したデータタイプ/番号および受信時動作を設定します。  
 internal ASListに追加後、必要があればexternal ASListにAutoSendの要求を出します。
 
@@ -64,7 +66,7 @@ void func(int i, double d)
 
 ASAction構造体で追加要素指定をすることも可能ですが、これに関しては引数を展開して再実行する実装をとっておりますので、説明は省略させていただきます。
 
-#### bool RmvAutoSend(char, int, AS_OnDataGot)
+### bool RmvAutoSend(char, int, AS_OnDataGot)
 引数で指定された情報についてAutoSendの停止要求を出します。
 第三引数にNULLを指定した場合、該当するデータ情報を持つすべてのASActionを削除します。
 
@@ -79,7 +81,7 @@ internal ASListより検索条件をもとに該当するASSettingを探し出�
 
 ASAction構造体で追加要素指定をすることも可能ですが、これに関しては引数を展開して再実行する実装をとっておりますので、説明は省略させていただきます。
 
-#### bool ASDataCheck(bool *)
+### bool ASDataCheck(bool *)
 バッファにデータが来ていないか確認し、来ているデータがASListに登録されているものであった場合には関連付けられた関数を実行します。
 
 引数にはbool型変数へのポインタを指定し、これには「受信したデータがASListに登録されていないものであったか」が記録されます。
@@ -88,7 +90,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 なお、受信したデータはLastCMDに記録されます。
 
-#### int CmdSender(const char *, char *, int)
+### int CmdSender(const char *, char *, int)
 指定されたコマンドを送信し、帰ってきたデータを指定された場所に記録します。
 
 第一引数には、送信するコマンドを指定します。  
@@ -97,7 +99,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、読み取ったデータのサイズです。なお、何らかのエラーが発生した場合は負の数が返されます。
 
-#### bool CmdSender(const char *, int/double *)
+### bool CmdSender(const char *, int/double *)
 指定されたコマンドを送信し、帰ってきたデータより情報を読み取り、指定された場所に記録します。
 
 第一引数には、送信するコマンドを指定します。  
@@ -105,17 +107,17 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、処理に成功したかどうかです。
 
-#### int CmdSenderI / double CmdSenderF (const char *)
+### int CmdSenderI / double CmdSenderF (const char *)
 指定されたコマンドを送信し、帰ってきたデータより情報を読み取ります。
 
 第一引数には、送信するコマンドを指定します。
 
 返り値は、読み取った結果得られた数値です。
 
-#### bool IsEnable(void)
+### bool IsEnable(void)
 本クラスが有効状態にあるかどうかを返します。基本trueのみが返ります。
 
-#### char *cmdCAGet(char *, const int, const char, const char, const int)
+### char *cmdCAGet(char *, const int, const char, const char, const int)
 引数で指定した情報をもとに、BIDS規格のコマンドを構成します。
 
 第一引数には、コマンドを書き込む場所を指定します。  
@@ -126,7 +128,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、コマンドの構成に成功した場合は第一引数に指定したポインタです。失敗した場合はNULLが返されます。
 
-#### char *cmdCAGet(char *, const int, const char, const int)
+### char *cmdCAGet(char *, const int, const char, const int)
 引数で指定した情報をもとに、BIDS規格のコマンドを構成します。
 
 第一引数には、コマンドを書き込む場所を指定します。  
@@ -136,7 +138,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、コマンドの構成に成功した場合は第一引数に指定したポインタです。失敗した場合はNULLが返されます。
 
-#### bool HeaderCheck(char *, const int, const char, const char)
+### bool HeaderCheck(char *, const int, const char, const char)
 与えられた文字列がBIDS規格において指定した条件に合致するものであるかどうかを確認します。
 
 第一引数には、チェックする文字列が格納された場所へのポインタを指定します。  
@@ -146,7 +148,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、与えられた文字列が条件に一致するものであるかどうかです。
 
-#### bool HeaderCheck(char *, const int, const char, const int)
+### bool HeaderCheck(char *, const int, const char, const int)
 与えられた文字列がBIDS規格において指定した条件に合致するものであるかどうかを確認します。
 
 第一引数には、チェックする文字列が格納された場所へのポインタを指定します。  
@@ -156,7 +158,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、与えられた文字列が条件に一致するものであるかどうかです。
 
-#### bool HeaderCheck(char *, const int, const char, const char, const int)
+### bool HeaderCheck(char *, const int, const char, const char, const int)
 与えられた文字列がBIDS規格において指定した条件に合致するものであるかどうかを確認します。
 
 第一引数には、チェックする文字列が格納された場所へのポインタを指定します。  
@@ -167,11 +169,11 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 
 返り値は、与えられた文字列が条件に一致するものであるかどうかです。
 
-
-## TR.BIDS.defs.h
+---
+# TR.BIDS.defs.h
 コマンドを構成する際に便利になるよう、情報と数値等を関連付けています。
 
-### Command Type Characters
+## Command Type Characters
 |定義名|コマンド種類|
 |-|-|
 |CMD_VERSION|バージョン情報|
@@ -180,7 +182,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 |CMD_AUTOSEND_DEL|AutoSend Listからの消去要求|
 |CMD_ERROR|エラー発生を通知|
 
-### Data Type Symbol Characters
+## Data Type Symbol Characters
 |定義名|データ種類|
 |-|-|
 |DTYPE_ELAPD|Elapse Data|
@@ -188,7 +190,7 @@ ASAction構造体で追加要素指定をすることも可能ですが、これ
 |DTYPE_HANDPOS|ハンドル位置情報|
 |DTYPE_CONSTD|車両毎固定値情報|
 
-### Data Numbers
+## Data Numbers
 |定義名|データ種類|単位|
 |-|-|-|
 |DNUM_ELAPD_DISTANCE|現在の車両位置情報|m|
