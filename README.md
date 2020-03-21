@@ -2,6 +2,9 @@
 Serial Interfaceを通じたBIDS中継ソフトとの通信を補助します。  
 BIDS.ArduinoSketchesから移動したものです。
 
+## examples
+[スケッチ例に関しては、こちらをご覧ください。](./examples/README.md)
+
 ## TR.BIDS.libs.h
 通信を補助する機能を定義しています。実装はTR.BIDS.libs.cppにあります。
 
