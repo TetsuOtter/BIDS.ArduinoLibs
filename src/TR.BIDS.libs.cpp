@@ -5,8 +5,8 @@
 #define TIMEOUT_NUM 10000
 
 #include <Arduino.h>
-#include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "UFunc.h"
 #include "TR.BIDS.libs.h"
 
@@ -38,7 +38,7 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
 {
   if (act == NULL)
     return false;
-  if (Actions_count >= Actions_MAX)
+  if (Actions_count >= AS_MAX)
     return false;
   bool IsSameDataAlready = false;
   for (int i = 0; i < Actions_count; i++)
@@ -50,7 +50,9 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
         return false;
     }
   }
-  if (!IsSameDataAlready || CmdSenderI(("TRA" + String(type) + String(data_num)).c_str()) != 0)
+
+  char ca[CMD_LEN_MAX];
+  if (!IsSameDataAlready || CmdSenderI(cmdCAGet(ca, CMD_LEN_MAX, 'A', type, data_num)) != 0)
     return false;
 
   ASActoinsSet(&ASActions[Actions_count++], type, data_num, act);
@@ -96,8 +98,10 @@ bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
       Actions_count--;
     }
   }
+  char ca[CMD_LEN_MAX];
   if (IsFound && ActNotSameSkipCount == 0)
-    CmdSenderI(("TRD" + String(type) + String(data_num)).c_str());
+    CmdSenderI(cmdCAGet(ca, CMD_LEN_MAX, 'D', type, data_num));
+
   return IsFound;
 }
 bool BIDS::RmvAutoSend(ASAction asa)
@@ -111,61 +115,55 @@ bool BIDS::ASDataCheck(bool *NonASCMDGot)
   if ((*UsingSerial).available() <= 0)
     return false;
 
-  ZeroFill(LastCMD, LastCMD_len);
+  ZeroFill(LastCMD, CMD_LEN_MAX);
 
-  int len = (*UsingSerial).readBytesUntil('\n', LastCMD, LastCMD_len);
+  int len = (*UsingSerial).readBytesUntil('\n', LastCMD, CMD_LEN_MAX);
 
   if (len <= 0)
     return false;
 
-  if (len <= 4 || LastCMD[0] != 'T' || LastCMD[1] != 'R' || LastCMD[2] != 'I')
-  {
-    *NonASCMDGot = true;
-    return false;
-  }
+  *NonASCMDGot = true;
 
-  int data_start_pos = 0;
-  for (int i = 4; i < len; i++)
-  {
-    if (LastCMD[i] == 'X')
-    {
-      data_start_pos = i + 1;
-      break;
-    }
-  }
-  if (data_start_pos == 0)
-  {
-    *NonASCMDGot = true;
+  if (!HeaderCheck(LastCMD, CMD_LEN_MAX, 'I'))
     return false;
-  }
 
-  int dnum = atoi(&LastCMD[4]);
-  int valI = atoi(&LastCMD[data_start_pos]);
-  double valF = atof(&LastCMD[data_start_pos]);
-  bool Done = false;
+  char *cp = NULL;
+  int dnum = (int)strtol(&LastCMD[4], NULL, 10);
+
+  if (cp == NULL)
+    return false;
+
+  int valI = (int)strtol(&cp[1], NULL, 10);
+  double valF = strtod(&cp[1], NULL);
   for (int i = 0; i < Actions_count; i++)
   {
     if (LastCMD[3] == ASActions[i].type && dnum == ASActions[i].data_num)
     {
       ASActions[i].action(valI, valF);
-      Done = true;
+      *NonASCMDGot = false;
     }
   }
 
-  return Done;
+  return !(*NonASCMDGot);
 }
 
 int BIDS::CmdSender(const char *cmd, char *ret, int retlen)
 {
-  (*UsingSerial).println(cmd);
+  if (cmd == NULL)
+    return -1;
+
   int w = 0;
-  while ((*UsingSerial).available() <= 0)
-  {
-    if (w >= TIMEOUT_NUM)
-      return 0;
-    delay(1);
-    w++;
-  }
+
+  w = (*UsingSerial).println(cmd); //Serial Send
+  if (ret == NULL || retlen <= 0)  //Only Sending Mode
+    return -w;
+
+  for (w = 0; (*UsingSerial).available() <= 0; w++) //Serial ReadWait
+    if (w >= TIMEOUT_NUM)                           //Timeout Check
+      return -1;
+    else
+      delay(1);
+
   int len = (*UsingSerial).available();
   if (len >= retlen)
     len = retlen;
@@ -174,12 +172,15 @@ int BIDS::CmdSender(const char *cmd, char *ret, int retlen)
     ret[i] = (*UsingSerial).read();
   return len;
 }
+
 bool BIDS::CmdSender(const char *cmd, int *ret)
 {
+  if (cmd == NULL || ret == NULL)
+    return false;
   int len = 0;
-  char charr[100];
-  len = CmdSender(cmd, charr, 100);
-  if (len <= 3 || charr[0] != 'T' || charr[1] != 'R')
+  char charr[CMD_LEN_MAX];
+  len = CmdSender(cmd, charr, CMD_LEN_MAX);
+  if (!HeaderCheck(charr, len))
     return false;
 
   *ret = 0;
@@ -187,7 +188,7 @@ bool BIDS::CmdSender(const char *cmd, int *ret)
   {
     if (charr[i] == 'X')
     {
-      *ret = atoi(&charr[i + 1]);
+      *ret = (int)strtol(&charr[i + 1], NULL, 10);
       return true;
     }
     else if (cmd[i] != charr[i])
@@ -196,18 +197,23 @@ bool BIDS::CmdSender(const char *cmd, int *ret)
 }
 bool BIDS::CmdSender(const char *cmd, double *ret)
 {
-  int len = 0;
-  char charr[100];
-  len = CmdSender(cmd, charr, 100);
-  if (len <= 3 || charr[0] != 'T' || charr[1] != 'R')
+  if (cmd == NULL || ret == NULL)
     return false;
 
-  *ret = 0;
+  int len = 0;
+  char charr[CMD_LEN_MAX];
+
+  len = CmdSender(cmd, charr, CMD_LEN_MAX);
+
+  if (!HeaderCheck(charr, len))
+    return false;
+
+  *ret = 0.f;
   for (int i = 0; i < len; i++)
   {
     if (charr[i] == 'X')
     {
-      *ret = atof(&charr[i + 1]);
+      *ret = strtod(&charr[i + 1], NULL);
       return true;
     }
     else if (cmd[i] != charr[i])
@@ -216,12 +222,18 @@ bool BIDS::CmdSender(const char *cmd, double *ret)
 }
 int BIDS::CmdSenderI(const char *cmd)
 {
+  if (cmd == NULL)
+    return 0;
+
   int ret;
   CmdSender(cmd, &ret);
   return ret;
 }
 double BIDS::CmdSenderF(const char *cmd)
 {
+  if (cmd == NULL)
+    return 0;
+
   double ret;
   CmdSender(cmd, &ret);
   return ret;
@@ -229,4 +241,71 @@ double BIDS::CmdSenderF(const char *cmd)
 bool BIDS::IsEnable()
 {
   return isEnable;
+}
+
+char *BIDS::cmdCAGet(char *ca, const int ca_len, const char cmdType, const int data_num)
+{
+  return cmdCAGet(ca, ca_len, cmdType, 0, data_num);
+}
+char *BIDS::cmdCAGet(char *ca, const int ca_len, const char cmdType, const char data_type, const int data_num)
+{
+  if (ca == NULL || ca_len <= 3)
+    return NULL;
+
+  if (data_type != 0)
+    snprintf(ca, ca_len, "TR%c%c%d", cmdType, data_type, data_num);
+  else
+    snprintf(ca, ca_len, "TR%c%d", cmdType, data_num);
+
+  return ca;
+}
+
+bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType = 0, const char data_type = 0)
+{
+  if (ca == NULL || ca_len <= 2)
+    return false;
+
+  char c[] = "TR\0\0\0";
+  int len_min = HeaderSize;
+  if (cmdType != 0) //needed cmdType check
+  {
+    if (data_type == 0) //not needed data_type check
+    {
+      len_min = HeaderSize + 1;
+      c[HeaderSize] = cmdType;
+    }
+    else //needed data_type check
+    {
+      len_min = HeaderSize + 2;
+      c[HeaderSize] = cmdType;
+      c[HeaderSize + 1] = data_type;
+    }
+  }
+
+  if (ca_len <= len_min)
+    return false;
+
+  return strncmp(ca, c, len_min) == 0;
+}
+bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType, const int data_num)
+{
+  HeaderCheck(ca, ca_len, cmdType, 0, data_num);
+}
+bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType, const char data_type, const int data_num)
+{
+  if (ca == NULL || ca_len <= (HeaderSize + 3))
+    return false;
+
+  int ca_dnum = !data_num;
+  int nPos = HeaderSize + 2;
+
+  if (!HeaderCheck(ca, ca_len, cmdType, data_type))
+    return false;
+
+  if (data_type == 0)
+    nPos--;
+
+  ca_dnum = (int)strtol(&ca[nPos], NULL, 10);
+
+  return data_num == ca_dnum;
 }
