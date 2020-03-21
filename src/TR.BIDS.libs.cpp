@@ -64,11 +64,7 @@ bool BIDS::AddAutoSend(ASAction asa)
   return AddAutoSend(asa.type, asa.data_num, asa.action);
 }
 
-bool BIDS::RmvAutoSend(char type, int data_num)
-{
-  RmvAutoSend(type, data_num, NULL);
-}
-bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
+bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act = NULL)
 {
   if (Actions_count <= 0)
     return false;
@@ -111,7 +107,11 @@ bool BIDS::RmvAutoSend(ASAction asa)
 
 bool BIDS::ASDataCheck(bool *NonASCMDGot)
 {
-  *NonASCMDGot = false;
+  bool b = false;
+  bool *nonASCMDGot = NonASCMDGot == NULL ? &b : NonASCMDGot;
+
+  *nonASCMDGot = false;
+
   if ((*UsingSerial).available() <= 0)
     return false;
 
@@ -122,7 +122,7 @@ bool BIDS::ASDataCheck(bool *NonASCMDGot)
   if (len <= 0)
     return false;
 
-  *NonASCMDGot = true;
+  *nonASCMDGot = true;
 
   if (!HeaderCheck(LastCMD, CMD_LEN_MAX, 'I'))
     return false;
@@ -140,11 +140,11 @@ bool BIDS::ASDataCheck(bool *NonASCMDGot)
     if (LastCMD[3] == ASActions[i].type && dnum == ASActions[i].data_num)
     {
       ASActions[i].action(valI, valF);
-      *NonASCMDGot = false;
+      *nonASCMDGot = false;
     }
   }
 
-  return !(*NonASCMDGot);
+  return !(*nonASCMDGot);
 }
 
 int BIDS::CmdSender(const char *cmd, char *ret, int retlen)
@@ -177,6 +177,7 @@ bool BIDS::CmdSender(const char *cmd, int *ret)
 {
   if (cmd == NULL || ret == NULL)
     return false;
+
   int len = 0;
   char charr[CMD_LEN_MAX];
   len = CmdSender(cmd, charr, CMD_LEN_MAX);
