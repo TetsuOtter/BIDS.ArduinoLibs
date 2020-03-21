@@ -1,0 +1,3 @@
+# TR.BIDS.libs examples
+
+Now writing...
