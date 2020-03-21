@@ -8,7 +8,10 @@
 #define AS_MAX 100
 #endif
 
-#define LAST_CMD_LEN 64
+#ifndef CMD_LEN_MAX
+#define CMD_LEN_MAX 128
+#endif
+
 typedef void (*AS_OnDataGot)(int, double);
 typedef struct ASAction
 {
@@ -22,16 +25,16 @@ class BIDS
 private:
   bool isEnable = false;
   ASAction ASActions[AS_MAX];
-  int Actions_MAX = AS_MAX;
   int Actions_count = 0;
   Stream *UsingSerial;
-  const int LastCMD_len = LAST_CMD_LEN;
+
+  const int HeaderSize = 2;
 
   void ASActoinsSet(ASAction *asacts, const char type, const int data_num, AS_OnDataGot act);
   void ASActoinsSet(ASAction *asactDst, ASAction *asactSrc);
 
 public:
-  char LastCMD[LAST_CMD_LEN];
+  char LastCMD[CMD_LEN_MAX];
 
   BIDS(Stream *ser);
   ~BIDS();
@@ -49,6 +52,12 @@ public:
   double CmdSenderF(const char *cmd);
 
   bool IsEnable();
+
+  char *cmdCAGet(char *ca, const int ca_len, const char cmdType, const char data_type, const int data_num);
+  char *cmdCAGet(char *ca, const int ca_len, const char cmdType, const int data_num);
+  bool HeaderCheck(char *ca, const int ca_len, const char cmdType = 0, const char data_type = 0);
+  bool HeaderCheck(char *ca, const int ca_len, const char cmdType, const int data_num);
+  bool HeaderCheck(char *ca, const int ca_len, const char cmdType, const char data_type, const int data_num);
 };
 
 #endif
