@@ -3,7 +3,6 @@
 //Copyright 2020 Tetsu Otter
 #ifndef TR_BIDS_LIB_H
 #define TR_BIDS_LIB_H
-#include <Arduino.h>
 
 #ifndef AS_MAX
 #define AS_MAX 100
@@ -28,6 +27,9 @@ private:
   Stream *UsingSerial;
   const int LastCMD_len = LAST_CMD_LEN;
 
+  void ASActoinsSet(ASAction *asacts, const char type, const int data_num, AS_OnDataGot act);
+  void ASActoinsSet(ASAction *asactDst, ASAction *asactSrc);
+
 public:
   char LastCMD[LAST_CMD_LEN];
 
@@ -35,6 +37,7 @@ public:
   ~BIDS();
   bool AddAutoSend(char type, int data_num, AS_OnDataGot act);
   bool AddAutoSend(ASAction asa);
+  bool RmvAutoSend(char type, int data_num, AS_OnDataGot act);
   bool RmvAutoSend(char type, int data_num);
   bool RmvAutoSend(ASAction asa);
   bool ASDataCheck(bool *NonASCMDGot);

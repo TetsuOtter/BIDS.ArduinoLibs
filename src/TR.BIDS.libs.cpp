@@ -22,6 +22,18 @@ BIDS::~BIDS()
   isEnable = false;
 }
 
+void BIDS::ASActoinsSet(ASAction *asacts, const char type, const int data_num, AS_OnDataGot act)
+{
+  (*asacts).type = type;
+  (*asacts).data_num = data_num;
+  (*asacts).action = act;
+}
+void BIDS::ASActoinsSet(ASAction *asactDst, ASAction *asactSrc)
+{
+  ASActoinsSet(asactDst, (*asactSrc).type, (*asactSrc).data_num, (*asactSrc).action);
+  ASActoinsSet(asactSrc, 0, 0, NULL);
+}
+
 bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
 {
   if (act == NULL)
@@ -41,10 +53,7 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
   if (!IsSameDataAlready || CmdSenderI(("TRA" + String(type) + String(data_num)).c_str()) != 0)
     return false;
 
-  int Act_num = Actions_count++;
-  ASActions[Act_num].type = type;
-  ASActions[Act_num].data_num = data_num;
-  ASActions[Act_num].action = act;
+  ASActoinsSet(&ASActions[Actions_count++], type, data_num, act);
 
   return true;
 }
@@ -55,30 +64,45 @@ bool BIDS::AddAutoSend(ASAction asa)
 
 bool BIDS::RmvAutoSend(char type, int data_num)
 {
+  RmvAutoSend(type, data_num, NULL);
+}
+bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
+{
   if (Actions_count <= 0)
     return false;
+
+  int ActNotSameSkipCount = 0;
   bool IsFound = false;
-  if (CmdSenderI(("TRD" + String(type) + String(data_num)).c_str()) != 0)
-    return false;
+
   for (int i = 0; i < Actions_count; i++)
   {
-    if (!IsFound && ASActions[i].type == type && ASActions[i].data_num == data_num)
-      IsFound = true;
-    if (IsFound && (i + 1) < Actions_count)
+    if (ASActions[i].type == type && ASActions[i].data_num == data_num)
     {
-      ASActions[i].type = ASActions[i + 1].type;
-      ASActions[i].data_num = ASActions[i + 1].data_num;
-      ASActions[i].action = ASActions[i + 1].action;
+      if (act != NULL && ASActions[i].action != act) //Action Check Mode && Action is not same
+      {
+        ActNotSameSkipCount++;
+        continue;
+      }
+
+      IsFound = true;
+
+      if (i == (Actions_count - 1)) //Means that this is the Last Element
+      {
+        ASActoinsSet(&ASActions[i], 0, 0, NULL);
+        return true;
+      }
+      for (int j = i; j < Actions_count - 1; j++)
+        ASActoinsSet(&ASActions[j], &ASActions[j + 1]);
+      Actions_count--;
     }
   }
-  if (IsFound)
-    Actions_count--;
-
+  if (IsFound && ActNotSameSkipCount == 0)
+    CmdSenderI(("TRD" + String(type) + String(data_num)).c_str());
   return IsFound;
 }
 bool BIDS::RmvAutoSend(ASAction asa)
 {
-  return RmvAutoSend(asa.type, asa.data_num);
+  return RmvAutoSend(asa.type, asa.data_num, asa.action);
 }
 
 bool BIDS::ASDataCheck(bool *NonASCMDGot)
