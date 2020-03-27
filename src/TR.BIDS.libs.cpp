@@ -52,7 +52,7 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
   }
 
   char ca[CMD_LEN_MAX];
-  if (!IsSameDataAlready || CmdSenderI(cmdCAGet(ca, CMD_LEN_MAX, 'A', type, data_num)) != 0)
+  if (IsSameDataAlready || CmdSenderI(cmdCAGet(ca, CMD_LEN_MAX, 'A', type, data_num)) != 0)
     return false;
 
   ASActoinsSet(&ASActions[Actions_count++], type, data_num, act);
@@ -130,11 +130,14 @@ bool BIDS::ASDataCheck(bool *NonASCMDGot)
   char *cp = NULL;
   int dnum = (int)strtol(&LastCMD[4], NULL, 10);
 
+  for (int i = 0; i < len; i++)
+    if (LastCMD[i] == 'X')
+      cp = &LastCMD[i + 1];
   if (cp == NULL)
     return false;
 
-  int valI = (int)strtol(&cp[1], NULL, 10);
-  double valF = strtod(&cp[1], NULL);
+  int valI = (int)strtol(cp, NULL, 10);
+  double valF = strtod(cp, NULL);
   for (int i = 0; i < Actions_count; i++)
   {
     if (LastCMD[3] == ASActions[i].type && dnum == ASActions[i].data_num)
@@ -290,7 +293,7 @@ bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType = 0, const
 }
 bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType, const int data_num)
 {
-  HeaderCheck(ca, ca_len, cmdType, 0, data_num);
+  return HeaderCheck(ca, ca_len, cmdType, 0, data_num);
 }
 bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType, const char data_type, const int data_num)
 {
