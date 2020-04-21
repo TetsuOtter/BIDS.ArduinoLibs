@@ -53,7 +53,7 @@ public:
   //"data_num" : Requesting Data Number
   //"act" : Address of the function that to be executed when receiving the specified data
   //returns : whether the request accepted
-  bool AddAutoSend(char type, int data_num, AS_OnDataGot actact = NULL);
+  bool AddAutoSend(char type, int data_num, AS_OnDataGot act = NULL);
   //Request AutoSend Setting Add to internal (and external if needed) ASList
   //"asa" : Requesting ASSetting
   //returns : whether the request accepted
