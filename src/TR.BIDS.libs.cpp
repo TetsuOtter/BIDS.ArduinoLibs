@@ -64,7 +64,7 @@ bool BIDS::AddAutoSend(ASAction asa)
   return AddAutoSend(asa.type, asa.data_num, asa.action);
 }
 
-bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act = NULL)
+bool BIDS::RmvAutoSend(char type, int data_num, AS_OnDataGot act)
 {
   if (Actions_count <= 0)
     return false;
@@ -198,6 +198,7 @@ bool BIDS::CmdSender(const char *cmd, int *ret)
     else if (cmd[i] != charr[i])
       return false;
   }
+  return false;
 }
 bool BIDS::CmdSender(const char *cmd, double *ret)
 {
@@ -223,6 +224,7 @@ bool BIDS::CmdSender(const char *cmd, double *ret)
     else if (cmd[i] != charr[i])
       return false;
   }
+  return false;
 }
 int BIDS::CmdSenderI(const char *cmd)
 {
@@ -264,7 +266,7 @@ char *BIDS::cmdCAGet(char *ca, const int ca_len, const char cmdType, const char 
   return ca;
 }
 
-bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType = 0, const char data_type = 0)
+bool BIDS::HeaderCheck(char *ca, const int ca_len, const char cmdType, const char data_type)
 {
   if (ca == NULL || ca_len <= 2)
     return false;
