@@ -38,8 +38,11 @@ bool BIDS::AddAutoSend(char type, int data_num, AS_OnDataGot act)
         return false;
     }
   }
-  if (!IsSameDataAlready || CmdSenderI(("TRA" + String(type) + String(data_num)).c_str()) != 0)
-    return false;
+  if (!IsSameDataAlready)
+  {
+    double initVal = CmdSenderF(("TRA" + String(type) + String(data_num)).c_str());
+    act((int)initVal, initVal);
+  }
 
   int Act_num = Actions_count++;
   ASActions[Act_num].type = type;
